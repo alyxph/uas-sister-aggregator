@@ -1,16 +1,3 @@
-"""
-models.py — Pydantic data models for Pub-Sub Log Aggregator.
-
-Event schema:
-    {
-        "topic": "string",
-        "event_id": "string-unik",
-        "timestamp": "ISO8601",
-        "source": "string",
-        "payload": { ... }
-    }
-"""
-
 from __future__ import annotations
 
 from typing import Any

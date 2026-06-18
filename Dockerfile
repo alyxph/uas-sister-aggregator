@@ -7,7 +7,7 @@ FROM python:3.11-slim
 
 # ---------- OS-level hardening ----------
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- Non-root user ----------

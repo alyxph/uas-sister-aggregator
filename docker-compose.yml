@@ -1,14 +1,15 @@
 # ============================================================
-# docker-compose.yml — Bonus: Two-service Pub-Sub topology
+# docker-compose.yml — Multi-service Pub-Sub Log Aggregator (UAS)
 #
 # Services:
-#   aggregator — FastAPI log aggregator (always running)
-#   publisher  — One-shot publisher simulation (depends_on aggregator)
+#   aggregator — FastAPI log aggregator + idempotent consumers
+#   publisher  — One-shot event simulator (sends 20000+ events with 35% dups)
+#   broker     — Redis 7 (message queue / internal broker)
+#   storage    — PostgreSQL 16 (persistent dedup store + stats)
 #
-# Internal network only; no external services.
+# Network: internal only; no external service dependencies.
+# Persistence: named volumes for PostgreSQL and Redis data.
 # ============================================================
-
-version: "3.9"
 
 services:
 
@@ -16,14 +17,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: uts-aggregator:latest
     container_name: uts-aggregator
+    depends_on:
+      storage:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://user:pass@storage:5432/logdb
+      - BROKER_URL=redis://broker:6379/0
     ports:
       - "8080:8080"
-    volumes:
-      # Persistent dedup store: survives container restarts
-      - dedup_data:/app/data
-    environment:
-      DEDUP_DB_PATH: /app/data/dedup.db
     networks:
       - internal
     healthcheck:
@@ -31,29 +36,67 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
     restart: unless-stopped
 
   publisher:
     build:
-      context: .
-      dockerfile: Dockerfile.publisher
+      context: ./publisher
+      dockerfile: Dockerfile
+    image: uts-publisher:latest
     container_name: uts-publisher
     depends_on:
       aggregator:
         condition: service_healthy
     environment:
-      AGGREGATOR_URL: http://aggregator:8080
-      TOTAL_EVENTS: "6000"
-      DUPLICATE_RATE: "0.25"
-      BATCH_SIZE: "100"
-      TOPIC_COUNT: "5"
+      - TARGET_URL=http://aggregator:8080/publish
+      - TOTAL_EVENTS=20000
+      - DUPLICATE_RATE=0.35
+      - BATCH_SIZE=100
+      - TOPIC_COUNT=5
+      - MAX_RETRIES=5
     networks:
       - internal
     restart: "no"   # Run once, then exit
 
+  broker:
+    image: redis:7-alpine
+    container_name: uts-broker
+    networks:
+      - internal
+    ports:
+      - "6379:6379"  # exposed for local pytest
+    volumes:
+      - broker_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  storage:
+    image: postgres:16-alpine
+    container_name: uts-storage
+    environment:
+      - POSTGRES_DB=logdb
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    ports:
+      - "5432:5432"  # exposed for local pytest
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d logdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
 volumes:
-  dedup_data:
+  pg_data:
+  broker_data:
 
 networks:
   internal:
