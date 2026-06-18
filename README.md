@@ -2,9 +2,9 @@
 
 > UAS Sistem Terdistribusi dan Parallel — Idempotent Consumer + Persistent Deduplication dengan PostgreSQL dan Redis
 
-Link YouTube (Demo): _[MASUKKAN LINK YOUTUBE ANDA DI SINI]_
+Link YouTube (Demo):
 
-Link Dokumen Laporan: _[MASUKKAN LINK GOOGLE DRIVE ANDA DI SINI]_
+Link Dokumen Laporan:
 
 ---
 
@@ -51,6 +51,7 @@ flowchart TD
 </details>
 
 ### ASCII Diagram
+
 ```
 ┌─────────────────── Docker Compose Network (internal) ───────────────────┐
 │                                                                          │
@@ -95,8 +96,8 @@ flowchart TD
 - **GET /events** — Daftar event unik yang telah diproses.
 - **GET /stats** — Statistik real-time yang konsisten (received, unique, duplicates, uptime).
 - **Idempotent consumer** — Event yang sama tidak diproses lebih dari sekali berkat atomicity `INSERT ... ON CONFLICT DO NOTHING`.
-- **Persistent dedup store** — Data aman meski container direstart atau di-*recreate* berkat named volume PostgreSQL.
-- **Message Broker** — Redis bertindak sebagai *buffer* yang andal untuk lalu lintas antar komponen.
+- **Persistent dedup store** — Data aman meski container direstart atau di-_recreate_ berkat named volume PostgreSQL.
+- **Message Broker** — Redis bertindak sebagai _buffer_ yang andal untuk lalu lintas antar komponen.
 
 ---
 
@@ -175,23 +176,27 @@ Sistem dapat diuji beban untuk memastikan kemampuannya menangani minimal 20.000 
 Referensi penggunaan K6: [GitHub K6](https://github.com/grafana/k6) | [Contoh penggunaan](https://github.com/grafana/k6/tree/master/examples)
 
 **Jika K6 terinstal secara lokal di komputer:**
+
 ```bash
 k6 run k6/load_test.js
 ```
 
 **Jika menggunakan Docker di Windows PowerShell:**
+
 ```powershell
 Get-Content k6/load_test.js | docker run -i --rm -e AGGREGATOR_URL=http://host.docker.internal:8080 grafana/k6 run -
 ```
 
 **Jika menggunakan Docker di Git Bash / WSL / Linux:**
+
 ```bash
 docker run -i --rm -e AGGREGATOR_URL=http://host.docker.internal:8080 grafana/k6 run - < k6/load_test.js
 ```
 
 > [!TIP]
 > **Catatan Pengguna Windows (PowerShell):**
-> Secara default, PowerShell memiliki alias `curl` yang merujuk ke cmdlet `Invoke-WebRequest` yang memiliki parameter berbeda dari cURL asli. 
+> Secara default, PowerShell memiliki alias `curl` yang merujuk ke cmdlet `Invoke-WebRequest` yang memiliki parameter berbeda dari cURL asli.
+>
 > - Gunakan **`curl.exe`** alih-alih `curl` agar memanggil binary cURL asli di Windows.
 > - Atau gunakan syntax cmdlet asli PowerShell (`Invoke-RestMethod`), contoh:
 >   `Invoke-RestMethod -Uri "http://localhost:8080/publish" -Method Post -ContentType "application/json" -Body '{"topic":"test", "event_id":"TEST-001"}'`
@@ -203,6 +208,7 @@ docker run -i --rm -e AGGREGATOR_URL=http://host.docker.internal:8080 grafana/k6
 Terima single event atau batch.
 
 **Single event:**
+
 ```bash
 curl -X POST http://localhost:8080/publish \
   -H "Content-Type: application/json" \
@@ -216,6 +222,7 @@ curl -X POST http://localhost:8080/publish \
 ```
 
 **Batch:**
+
 ```bash
 curl -X POST http://localhost:8080/publish \
   -H "Content-Type: application/json" \
@@ -281,9 +288,10 @@ curl http://localhost:8080/stats
 
 1. **Jaringan Internal** — Broker (Redis) dan Storage (PostgreSQL) hanya dapat diakses melalui jaringan internal Docker. Hanya API aggregator yang diekspos melalui port 8080.
 2. **Tanpa Autentikasi** — API bersifat publik dalam pengembangan lokal. Pada tahap produksi, tambahkan kapabilitas token (contoh: JWT) atau API Key.
-3. **Ordering** — Karena diimplementasikan pada sistem terdistribusi asinkron, sistem mengandalkan *partial ordering* via `processed_at` atau `timestamp` milik event. *Total ordering* global tidak digunakan karena berdampak negatif pada performa *throughput*.
+3. **Ordering** — Karena diimplementasikan pada sistem terdistribusi asinkron, sistem mengandalkan _partial ordering_ via `processed_at` atau `timestamp` milik event. _Total ordering_ global tidak digunakan karena berdampak negatif pada performa _throughput_.
 
 ---
+
 ## Referensi Utama
 
-Coulouris, G., Dollimore, J., Kindberg, T., & Blair, G. (2012). *Distributed systems: Concepts and design* (5th ed.). Pearson.
+Coulouris, G., Dollimore, J., Kindberg, T., & Blair, G. (2012). _Distributed systems: Concepts and design_ (5th ed.). Pearson.
