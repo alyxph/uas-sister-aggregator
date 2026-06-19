@@ -14,9 +14,6 @@ Berikut adalah diagram arsitektur multi-service dari Pub-Sub Log Aggregator Terd
 
 ### Mermaid Diagram (Auto-Render di GitHub)
 
-<details>
-<summary><b>Klik untuk melihat kode Mermaid / Diagram Alir</b></summary>
-
 ```mermaid
 flowchart TD
     subgraph ClientLayer [Client / Publisher Layer]
@@ -47,8 +44,6 @@ flowchart TD
     style Redis fill:#ffebee,stroke:#ff5252,stroke-width:2px
     style Postgres fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
 ```
-
-</details>
 
 ### ASCII Diagram
 
