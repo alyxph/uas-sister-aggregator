@@ -2,9 +2,9 @@
 
 > UAS Sistem Terdistribusi dan Parallel — Idempotent Consumer + Persistent Deduplication dengan PostgreSQL dan Redis
 
-Link YouTube (Demo):
+Link YouTube (Demo): https://youtu.be/10IXAmP9TL8
 
-Link Dokumen Laporan:
+Link Dokumen Laporan:https://drive.google.com/file/d/19sP80mDsfQ6lpbA1sfIhqhe5-d2vK8WH/view?usp=drive_link
 
 ---
 
@@ -104,7 +104,7 @@ flowchart TD
 ## Struktur Direktori
 
 ```
-uas-sister/
+uts-aggregator/
 ├── src/
 │   ├── main.py          # FastAPI app, endpoints, lifespan (Aggregator)
 │   ├── models.py        # Pydantic Event model + validation
